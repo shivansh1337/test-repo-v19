@@ -1,0 +1,38 @@
+steps:
+  # Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/minyvinyl-blog:latest', '.']
+    timeout: '1800s'  # 30 minutes timeout
+
+  # Push the container image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/minyvinyl-blog:latest']
+    timeout: '600s'  # 10 minutes timeout
+
+  # Deploy container image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'minyvinyl-blog'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/minyvinyl-blog:latest'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--set-env-vars'
+      - 'ENVIRONMENT=production'
+    timeout: '600s'  # 10 minutes timeout
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'E2_HIGHCPU_8'  # Optional: Specify machine type for build
+  diskSizeGb: 100  # Optional: Increase disk size if needed
+
+images:
+  - 'gcr.io/$PROJECT_ID/minyvinyl-blog:latest'
+
+timeout: '3600s'  # Global timeout of 1 hour 
